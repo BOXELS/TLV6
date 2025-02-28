@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { useUsers } from '../../hooks/useUsers';
-import type { UserWithDetails } from '../../types/users';
+import type { UserWithDetails, UserType } from '../../types/users';
+import { supabase } from '../../lib/supabase';
 import toast from 'react-hot-toast';
 
 type UserFormProps = {
@@ -10,10 +11,11 @@ type UserFormProps = {
 };
 
 export default function UserForm({ user, onClose }: UserFormProps) {
-  const { updateUserDetails } = useUsers();
+  const { updateUserDetails, updateUserType } = useUsers();
   const [loading, setLoading] = useState(false);
+  const [userTypes, setUserTypes] = useState<UserType[]>([]);
+  const [selectedTypeId, setSelectedTypeId] = useState(user.type.id);
   const [details, setDetails] = useState({
-    email: user.email ?? '',
     first_name: user.details?.first_name || '',
     last_name: user.details?.last_name || '',
     address_line1: user.details?.address_line1 || '',
@@ -24,11 +26,36 @@ export default function UserForm({ user, onClose }: UserFormProps) {
     phone: user.details?.phone || '',
   });
 
+  useEffect(() => {
+    async function loadUserTypes() {
+      const { data: types, error } = await supabase
+        .from('user_types')
+        .select('*')
+        .order('name');
+
+      if (error) {
+        console.error('Error loading user types:', error);
+        toast.error('Failed to load user types');
+        return;
+      }
+
+      setUserTypes(types);
+    }
+
+    loadUserTypes();
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
+      // Update user type if changed
+      if (selectedTypeId !== user.type.id) {
+        const success = await updateUserType(user.id, selectedTypeId);
+        if (!success) throw new Error('Failed to update user type');
+      }
+
       // Update details
       const success = await updateUserDetails(user.id, details);
       if (!success) throw new Error('Failed to update details');
@@ -58,10 +85,25 @@ export default function UserForm({ user, onClose }: UserFormProps) {
             <label className="block text-sm font-medium text-gray-700">Email</label>
             <input
               type="text"
-              value={user.email}
+              value={user.email || ''}
               disabled
               className="mt-1 block w-full rounded-md border-gray-300 bg-gray-50"
             />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">User Type</label>
+            <select
+              value={selectedTypeId}
+              onChange={(e) => setSelectedTypeId(e.target.value)}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+            >
+              {userTypes.map((type) => (
+                <option key={type.id} value={type.id}>
+                  {type.name}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -138,7 +180,7 @@ export default function UserForm({ user, onClose }: UserFormProps) {
           <div>
             <label className="block text-sm font-medium text-gray-700">Phone</label>
             <input
-              type="text"
+              type="tel"
               value={details.phone}
               onChange={(e) => setDetails({ ...details, phone: e.target.value })}
               className="mt-1 block w-full rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"

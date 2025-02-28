@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { buildTitleQuery, buildKeywordQuery } from '../utils/queryBuilder';
-import type { DesignFile } from '../types/database';
+import type { DesignFile, DesignMockup } from '../types/database';
 import type { DesignFilters } from '../types/filters';
 import { retryWithBackoff } from '../utils/retry';
 import toast from 'react-hot-toast';
+import { useAuth } from '../context/AuthContext';
 
 const DEFAULT_FILTERS: DesignFilters = {
   titleSearch: '',
@@ -20,6 +21,7 @@ export function useDesigns(limit: number = 25) {
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState<DesignFilters>(DEFAULT_FILTERS);
+  const { user } = useAuth();
 
   useEffect(() => {
     loadDesigns();
@@ -58,7 +60,7 @@ export function useDesigns(limit: number = 25) {
             is_main,
             sort_order
           ),
-          keywords:design_keyword_links!left (
+          design_keyword_links!left (
             keywords!inner (
               keyword
             )
@@ -98,13 +100,16 @@ export function useDesigns(limit: number = 25) {
           query = query.is('jane_designs_listed', null);
         }
 
+        // Filter by user unless they are admin/super_admin
+        if (user && user.type?.code !== 'admin' && user.type?.code !== 'super_admin') {
+          query = query.eq('uploaded_by', user.id);
+        }
+
         // Apply ordering and limit
-        query = query
+        return query
           .order('created_at', { ascending: false })
           .range((currentPage - 1) * limit, currentPage * limit - 1)
           .limit(limit);
-
-        return await query;
       }, {
         maxAttempts: 3,
         onError: (error, attempt) => {
@@ -122,23 +127,51 @@ export function useDesigns(limit: number = 25) {
       console.log('Raw design data:', data);
 
       // Transform the data
-      const transformedData = data?.map(design => ({
-        ...design,
-        mockups: (design.design_mockups || []).sort((a, b) => {
-          // Main mockup should always be first
-          if (a.is_main) return -1;
-          if (b.is_main) return 1;
-          // Then sort by sort_order
-          return (a.sort_order || 0) - (b.sort_order || 0);
-        }),
-        keywords: design.design_keyword_links?.map(link => ({
-          keyword: link.keywords?.keyword
-        })).filter(k => k.keyword) || [],
-        categories: design.categories?.map(cat => ({
-          category_id: cat.category_id,
-          name: cat.categories?.name
-        })).filter(c => c.name) || []
-      })) || [];
+      const transformedData = (data || []).map(design => {
+        const mockups = (design.design_mockups || [])
+          .sort((a, b) => {
+            if (a.is_main) return -1;
+            if (b.is_main) return 1;
+            return (a.sort_order || 0) - (b.sort_order || 0);
+          })
+          .map(mockup => ({
+            id: mockup.id,
+            url: mockup.url,
+            thumb_url: mockup.thumb_url,
+            is_main: mockup.is_main,
+            sort_order: mockup.sort_order,
+            design_id: design.id,
+            created_at: design.created_at
+          }));
+
+        const keywords = (design.design_keyword_links || [])
+          .map(link => ({
+            keyword: link.keywords?.keyword || ''
+          }))
+          .filter(k => k.keyword);
+
+        const categories = (design.categories || [])
+          .map(cat => ({
+            category_id: cat.category_id,
+            name: cat.categories?.name || ''
+          }))
+          .filter(c => c.name);
+
+        return {
+          id: design.id,
+          sku: design.sku,
+          title: design.title,
+          uploaded_by: design.uploaded_by,
+          print_file_url: design.print_file_url,
+          web_file_url: design.web_file_url,
+          created_at: design.created_at,
+          updated_at: design.updated_at,
+          mockups,
+          keywords,
+          categories,
+          jane_designs_listed: design.jane_designs_listed || []
+        };
+      });
 
       console.log('Transformed design data:', transformedData);
 

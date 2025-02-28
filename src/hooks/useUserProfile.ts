@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
+
 type UserProfile = {
   username: string;
-  role: 'admin';
 };
 
 export default function useUserProfile() {
@@ -28,14 +27,14 @@ export default function useUserProfile() {
       try {
         console.group('🔄 Loading user profile for', user.email);
         console.log('User ID:', user.id);
+        console.log('User Type:', user.type?.name);
         
         // Extract username from email
         const username = user.email?.split('@')[0] || 'User';
 
         // Set profile
         setProfile({
-          username,
-          role: 'admin'
+          username
         });
 
         setError(null);

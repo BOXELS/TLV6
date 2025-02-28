@@ -21,7 +21,7 @@ const ssaTools = [
   { name: 'Order History', icon: Package, path: '/ssa/order-history' }
 ];
 
-const standardAdminTools = [
+const adminTools = [
   { name: 'Categories', icon: FolderEdit, path: '/categories' },
   { name: 'Keywords', icon: Tag, path: '/keywords' },
   { name: 'Clothing Styles', icon: Tag, path: '/clothing-styles' },
@@ -34,88 +34,95 @@ const standardAdminTools = [
 
 export default function Sidebar() {
   const location = useLocation();
-  const adminTools = standardAdminTools;
+  const { isAdmin } = useAdmin();
 
   return (
-    <div className="w-64 bg-white shadow-sm min-h-[calc(100vh-4rem)]">
-      <div className="p-4">
-        <div className="space-y-6">
-          <div>
-            <h2 className="text-lg font-semibold text-gray-700 mb-4">Tools</h2>
-            <nav className="space-y-1">
-              {commonTools.map((tool) => (
-                <Link
-                  key={tool.name}
-                  to={tool.path}
-                  className={`flex items-center px-3 py-2 w-full text-left rounded-md hover:bg-gray-100 hover:text-gray-900 ${
-                    location.pathname === tool.path
-                      ? 'bg-indigo-50 text-indigo-700'
-                      : 'text-gray-700'
-                  }`}
-                >
-                  <tool.icon className="mr-3 h-5 w-5" />
-                  {tool.name}
-                </Link>
-              ))}
-            </nav>
-          </div>
-          <div>
-            <h2 className="text-lg font-semibold text-gray-700 mb-4">SSA</h2>
-            <nav className="space-y-1">
-              {ssaTools.map((tool) => (
-                <Link
-                  key={tool.name}
-                  to={tool.path}
-                  className={`flex items-center px-3 py-2 w-full text-left rounded-md hover:bg-gray-100 hover:text-gray-900 ${
-                    location.pathname === tool.path
-                      ? 'bg-indigo-50 text-indigo-700'
-                      : 'text-gray-700'
-                  }`}
-                >
-                  <tool.icon className="mr-3 h-5 w-5" />
-                  {tool.name}
-                </Link>
-              ))}
-            </nav>
-          </div>
-          <div>
-            <h2 className="text-lg font-semibold text-gray-700 mb-4">Shipstation</h2>
-            <nav className="space-y-1">
-              {shipstationTools.map((tool) => (
-                <Link
-                  key={tool.name}
-                  to={tool.path}
-                  className={`flex items-center px-3 py-2 w-full text-left rounded-md hover:bg-gray-100 hover:text-gray-900 ${
-                    location.pathname === tool.path
-                      ? 'bg-indigo-50 text-indigo-700'
-                      : 'text-gray-700'
-                  }`}
-                >
-                  <tool.icon className="mr-3 h-5 w-5" />
-                  {tool.name}
-                </Link>
-              ))}
-            </nav>
-          </div>
+    <div className="h-full bg-white border-r border-gray-200 w-64 flex-shrink-0">
+      <div className="h-full flex flex-col">
+        <div className="flex-1 flex flex-col pt-5 pb-4 overflow-y-auto">
+          <div className="flex-1 px-3 space-y-8">
+            <div>
+              <h2 className="text-lg font-semibold text-gray-700 mb-4">Tools</h2>
+              <nav className="space-y-1">
+                {commonTools.map((tool) => (
+                  <Link
+                    key={tool.name}
+                    to={tool.path}
+                    className={`flex items-center px-3 py-2 w-full text-left rounded-md hover:bg-gray-100 hover:text-gray-900 ${
+                      location.pathname === tool.path
+                        ? 'bg-indigo-50 text-indigo-700'
+                        : 'text-gray-700'
+                    }`}
+                  >
+                    <tool.icon className="mr-3 h-5 w-5" />
+                    {tool.name}
+                  </Link>
+                ))}
+              </nav>
+            </div>
 
-          <div>
-            <h2 className="text-lg font-semibold text-gray-700 mb-4">Admin</h2>
-            <nav className="space-y-1">
-              {adminTools.map((tool) => (
-                <Link
-                  key={tool.name}
-                  to={tool.path}
-                  className={`flex items-center px-3 py-2 w-full text-left rounded-md hover:bg-gray-100 hover:text-gray-900 ${
-                    location.pathname === tool.path
-                      ? 'bg-indigo-50 text-indigo-700'
-                      : 'text-gray-700'
-                  }`}
-                >
-                  <tool.icon className="mr-3 h-5 w-5" />
-                  {tool.name}
-                </Link>
-              ))}
-            </nav>
+            <div>
+              <h2 className="text-lg font-semibold text-gray-700 mb-4">SSA</h2>
+              <nav className="space-y-1">
+                {ssaTools.map((tool) => (
+                  <Link
+                    key={tool.name}
+                    to={tool.path}
+                    className={`flex items-center px-3 py-2 w-full text-left rounded-md hover:bg-gray-100 hover:text-gray-900 ${
+                      location.pathname === tool.path
+                        ? 'bg-indigo-50 text-indigo-700'
+                        : 'text-gray-700'
+                    }`}
+                  >
+                    <tool.icon className="mr-3 h-5 w-5" />
+                    {tool.name}
+                  </Link>
+                ))}
+              </nav>
+            </div>
+
+            <div>
+              <h2 className="text-lg font-semibold text-gray-700 mb-4">Shipstation</h2>
+              <nav className="space-y-1">
+                {shipstationTools.map((tool) => (
+                  <Link
+                    key={tool.name}
+                    to={tool.path}
+                    className={`flex items-center px-3 py-2 w-full text-left rounded-md hover:bg-gray-100 hover:text-gray-900 ${
+                      location.pathname === tool.path
+                        ? 'bg-indigo-50 text-indigo-700'
+                        : 'text-gray-700'
+                    }`}
+                  >
+                    <tool.icon className="mr-3 h-5 w-5" />
+                    {tool.name}
+                  </Link>
+                ))}
+              </nav>
+            </div>
+
+            {/* Only show admin tools section if user is admin */}
+            {isAdmin && (
+              <div>
+                <h2 className="text-lg font-semibold text-gray-700 mb-4">Admin</h2>
+                <nav className="space-y-1">
+                  {adminTools.map((tool) => (
+                    <Link
+                      key={tool.name}
+                      to={tool.path}
+                      className={`flex items-center px-3 py-2 w-full text-left rounded-md hover:bg-gray-100 hover:text-gray-900 ${
+                        location.pathname === tool.path
+                          ? 'bg-indigo-50 text-indigo-700'
+                          : 'text-gray-700'
+                      }`}
+                    >
+                      <tool.icon className="mr-3 h-5 w-5" />
+                      {tool.name}
+                    </Link>
+                  ))}
+                </nav>
+              </div>
+            )}
           </div>
         </div>
       </div>

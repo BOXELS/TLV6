@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { createUser } from '../../utils/adminApi';
+import { supabase } from '../../lib/supabase';
+import type { UserType } from '../../types/users';
 
 type AddUserFormProps = {
   onClose: () => void;
@@ -12,6 +14,8 @@ export default function AddUserForm({ onClose, onSuccess }: AddUserFormProps) {
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
+  const [typeId, setTypeId] = useState<string>('');
+  const [userTypes, setUserTypes] = useState<UserType[]>([]);
   const [details, setDetails] = useState({
     first_name: '' as string,
     last_name: '' as string,
@@ -23,11 +27,35 @@ export default function AddUserForm({ onClose, onSuccess }: AddUserFormProps) {
     phone: '' as string,
   });
 
+  useEffect(() => {
+    async function loadUserTypes() {
+      const { data: types, error } = await supabase
+        .from('user_types')
+        .select('*')
+        .order('name');
+
+      if (error) {
+        console.error('Error loading user types:', error);
+        toast.error('Failed to load user types');
+        return;
+      }
+
+      setUserTypes(types);
+      // Set default type to 'user' if available
+      const defaultType = types.find(t => t.code === 'user');
+      if (defaultType) {
+        setTypeId(defaultType.id);
+      }
+    }
+
+    loadUserTypes();
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!email || !password) {
-      toast.error('Email and password are required');
+    if (!email || !password || !typeId) {
+      toast.error('Email, password, and user type are required');
       return;
     }
 
@@ -37,6 +65,7 @@ export default function AddUserForm({ onClose, onSuccess }: AddUserFormProps) {
       await createUser({
         email,
         password,
+        typeId,
         details
       });
 
@@ -93,13 +122,19 @@ export default function AddUserForm({ onClose, onSuccess }: AddUserFormProps) {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700">Role</label>
+              <label className="block text-sm font-medium text-gray-700">User Type *</label>
               <select
-                value="admin"
-                disabled
+                value={typeId}
+                onChange={(e) => setTypeId(e.target.value)}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                required
               >
-                <option value="admin">Admin</option>
+                <option value="">Select a user type</option>
+                {userTypes.map((type) => (
+                  <option key={type.id} value={type.id}>
+                    {type.name}
+                  </option>
+                ))}
               </select>
             </div>
 

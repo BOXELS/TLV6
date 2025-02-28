@@ -1,10 +1,48 @@
 import React from 'react';
-import { Edit2, Building2, Palette, Users } from 'lucide-react';
+import { Edit2, Building2, Palette, Users, Shield, User } from 'lucide-react';
 import { useUsers } from '../../hooks/useUsers';
 import type { UserWithDetails } from '../../types/users';
 
 type UsersListProps = {
   onEdit: (user: UserWithDetails) => void;
+};
+
+const getTypeIcon = (code: string) => {
+  switch (code) {
+    case 'super_admin':
+      return <Shield className="w-4 h-4 text-red-500" />;
+    case 'admin':
+      return <Shield className="w-4 h-4 text-indigo-500" />;
+    case 'vendor':
+      return <Building2 className="w-4 h-4 text-green-500" />;
+    case 'designer':
+      return <Palette className="w-4 h-4 text-purple-500" />;
+    case 'staff':
+      return <Users className="w-4 h-4 text-blue-500" />;
+    case 'user':
+      return <User className="w-4 h-4 text-gray-500" />;
+    default:
+      return null;
+  }
+};
+
+const getTypeStyles = (code: string) => {
+  switch (code) {
+    case 'super_admin':
+      return 'bg-red-100 text-red-800';
+    case 'admin':
+      return 'bg-indigo-100 text-indigo-800';
+    case 'vendor':
+      return 'bg-green-100 text-green-800';
+    case 'designer':
+      return 'bg-purple-100 text-purple-800';
+    case 'staff':
+      return 'bg-blue-100 text-blue-800';
+    case 'user':
+      return 'bg-gray-100 text-gray-800';
+    default:
+      return 'bg-gray-100 text-gray-800';
+  }
 };
 
 export default function UsersList({ onEdit }: UsersListProps) {
@@ -13,9 +51,6 @@ export default function UsersList({ onEdit }: UsersListProps) {
   if (loading) {
     return <div className="text-center py-8">Loading users...</div>;
   }
-
-  // Show all users since everyone is admin
-  const filteredUsers = users;
 
   return (
     <div className="bg-white rounded-lg shadow-sm">
@@ -30,7 +65,7 @@ export default function UsersList({ onEdit }: UsersListProps) {
                 Name
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Role
+                Type
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Last Login
@@ -41,7 +76,7 @@ export default function UsersList({ onEdit }: UsersListProps) {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {filteredUsers.map((user) => (
+            {users.map((user) => (
               <tr key={user.id}>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span className="text-sm text-gray-900 font-medium">{user.email}</span>
@@ -54,7 +89,12 @@ export default function UsersList({ onEdit }: UsersListProps) {
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <span className="text-sm text-gray-500">Admin</span>
+                  <div className="flex items-center">
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getTypeStyles(user.type.code)}`}>
+                      {getTypeIcon(user.type.code)}
+                      <span className="ml-1">{user.type.name}</span>
+                    </span>
+                  </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span className="text-sm text-gray-500">
@@ -79,33 +119,3 @@ export default function UsersList({ onEdit }: UsersListProps) {
     </div>
   );
 }
-
-const getRoleBadgeStyles = (role: string) => {
-  switch (role) {
-    case 'super_admin':
-      return 'bg-purple-900 text-white';
-    case 'admin':
-      return 'bg-purple-100 text-purple-800';
-    case 'sub_admin':
-      return 'bg-blue-100 text-blue-800';
-    case 'vendor':
-      return 'bg-green-100 text-green-800';
-    case 'designer':
-      return 'bg-indigo-100 text-indigo-800';
-    default:
-      return 'bg-gray-100 text-gray-800';
-  }
-};
-
-const getRoleIcon = (role: string) => {
-  switch (role) {
-    case 'vendor':
-      return <Building2 className="w-3 h-3" />;
-    case 'designer':
-      return <Palette className="w-3 h-3" />;
-    case 'staff':
-      return <Users className="w-3 h-3" />;
-    default:
-      return null;
-  }
-};
